@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Room Booking</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Book a Meeting Room</h1>
+
+    <div class="booking-form">
+        <label for="location">Location:</label>
+        <select id="location" name="location">
+            <option value="">-- Select Location --</option>
+        </select>
+
+        <label for="floor">Floor:</label>
+        <select id="floor" name="floor" disabled>
+            <option value="">-- Select Floor --</option>
+        </select>
+
+        <label for="room">Room:</label>
+        <select id="room" name="room" disabled>
+            <option value="">-- Select Room --</option>
+        </select>
+
+        <label for="timeslot">Time Slot:</label>
+        <select id="timeslot" name="timeslot" disabled>
+            <option value="">-- Select Time Slot --</option>
+        </select>
+
+        <button id="book-button" disabled>Book Room</button>
+    </div>
+
+    <div id="message-area"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

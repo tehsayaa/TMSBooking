@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: meeting-room-booking
+    runtime: node
+    buildCommand: npm install
+    startCommand: node index.js
+    staticDir: public
