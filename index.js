@@ -8,25 +8,41 @@ const port = 3000;
 
 // Locations and their floors
 const locationsData = {
-  'Hoà Lạc': ['1st Floor', '2nd Floor'],
-  'FPT Tower': ['10th Floor', '11th Floor', '12th Floor'],
-  'Duy Tân': ['3rd Floor', '4th Floor'],
-  'Fville 1': ['Ground Floor', '1st Floor'],
-  'Fville 2': ['Block A - 1st', 'Block B - 2nd'],
-  'Fville 3': ['Main Hall', 'Wing C - 3rd']
+  'Hoà Lạc': ['1', '2'],
+  'FPT Tower': ['10', '11', '12'],
+  'Duy Tân': ['3', '4'],
+  'Fville 1': ['0', '1'],
+  'Fville 2': ['A1', 'B2'],
+  'Fville 3': ['MH', 'C3']
 };
 
 // Rooms mapped by Location -> Floor -> Room Name
 const roomsData = {
   'Hoà Lạc': {
-    '1st Floor': ['HL-1F-Room A', 'HL-1F-Room B'],
-    '2nd Floor': ['HL-2F-Conf Hall']
+    '1': ['HL-1F-Room A', 'HL-1F-Room B'],
+    '2': ['HL-2F-Conf Hall']
   },
   'FPT Tower': {
-    '10th Floor': ['FPTT-10F-Room 101', 'FPTT-10F-Room 102'],
-    '11th Floor': ['FPTT-11F-Meeting Hub'],
-    '12th Floor': ['FPTT-12F-Exec Suite', 'FPTT-12F-Room A', 'FPTT-12F-Room B', 'FPTT-12F-Conf Room', 'FPTT-12F-Training Room']
+    '10': ['FPTT-10F-Room 101', 'FPTT-10F-Room 102'],
+    '11': ['FPTT-11F-Meeting Hub'],
+    '12': ['FPTT-12F-Exec Suite', 'FPTT-12F-Room A', 'FPTT-12F-Room B', 'FPTT-12F-Conf Room', 'FPTT-12F-Training Room']
   },
+  'Duy Tân': {
+    '3': ['DT-3F-Room Alpha'],
+    '4': ['DT-4F-Room Beta']
+  },
+  'Fville 1': {
+    '0': ['FV1-GF-Innovation'],
+    '1': ['FV1-1F-Collaboration']
+  },
+  'Fville 2': {
+    'A1': ['FV2-A1-Synergy'],
+    'B2': ['FV2-B2-Focus']
+  },
+  'Fville 3': {
+    'MH': ['FV3-MH-Connect'],
+    'C3': ['FV3-C3-Think Tank']
+  }
 };
 
 // Time slots mapped directly by Room Name (assuming unique room names across floors/locations for simplicity)
@@ -60,11 +76,11 @@ const timeSlotsByRoom = {
 
 // Mock user data
 const userLocations = {
-  'ToanLM1': { location: 'FPT Tower', floor: '12th Floor' },
-  'AnNH8': { location: 'Hoà Lạc', floor: '2nd Floor' },
-  'user123': { location: 'FPT Tower', floor: '10th Floor' },
-  'admin456': { location: 'Hoà Lạc', floor: '1st Floor' },
-  'dev789': { location: 'Fville 3', floor: 'Wing C - 3rd' }
+  'ToanLM1': { location: 'FPT Tower', floor: '12' },
+  'AnNH8': { location: 'Hoà Lạc', floor: '2' },
+  'user123': { location: 'FPT Tower', floor: '10' },
+  'admin456': { location: 'Hoà Lạc', floor: '1' },
+  'dev789': { location: 'Fville 3', floor: 'C3' }
 };
 
 // Middleware to parse JSON bodies
@@ -149,7 +165,7 @@ app.post('/api/book', (req, res) => {
 
   // Add more specific validation (does location/floor/room/timeslot exist?)
   if (location !== userData.location ||
-      floor !== userData.floor ||
+      floor !== userData.floor || // Compare with updated floor key
       !locationsData[location] ||
       !locationsData[location].includes(floor) ||
       !roomsData[location]?.[floor]?.includes(room) ||
@@ -172,7 +188,7 @@ app.post('/api/book', (req, res) => {
   console.log(`---------------------------\n`);
 
   // For the demo, always return success
-  res.json({ success: true, message: `Successfully booked ${room} on ${floor} at ${location} for ${timeSlot} for user ${username}` });
+  res.json({ success: true, message: `Successfully booked ${room} on floor ${floor} at ${location} for ${timeSlot} for user ${username}` });
 });
 
 // Get mock location/floor for a user
