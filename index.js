@@ -25,24 +25,8 @@ const roomsData = {
   'FPT Tower': {
     '10th Floor': ['FPTT-10F-Room 101', 'FPTT-10F-Room 102'],
     '11th Floor': ['FPTT-11F-Meeting Hub'],
-    '12th Floor': ['FPTT-12F-Exec Suite']
+    '12th Floor': ['FPTT-12F-Exec Suite', 'FPTT-12F-Room A', 'FPTT-12F-Room B', 'FPTT-12F-Conf Room', 'FPTT-12F-Training Room']
   },
-  'Duy Tân': {
-    '3rd Floor': ['DT-3F-Room Alpha'],
-    '4th Floor': ['DT-4F-Room Beta']
-  },
-  'Fville 1': {
-    'Ground Floor': ['FV1-GF-Innovation'],
-    '1st Floor': ['FV1-1F-Collaboration']
-  },
-  'Fville 2': {
-    'Block A - 1st': ['FV2-A1-Synergy'],
-    'Block B - 2nd': ['FV2-B2-Focus']
-  },
-  'Fville 3': {
-    'Main Hall': ['FV3-MH-Connect'],
-    'Wing C - 3rd': ['FV3-C3-Think Tank']
-  }
 };
 
 // Time slots mapped directly by Room Name (assuming unique room names across floors/locations for simplicity)
@@ -56,6 +40,10 @@ const timeSlotsByRoom = {
   'FPTT-10F-Room 102': ['09:00 - 10:00', '13:00 - 14:00', '16:00 - 17:00'],
   'FPTT-11F-Meeting Hub': ['10:30 - 12:00', '14:00 - 15:30'],
   'FPTT-12F-Exec Suite': ['11:00 - 12:30', '14:00 - 16:00'],
+  'FPTT-12F-Room A': ['11:00 - 12:00', '14:00 - 15:00', '16:00 - 17:00'],
+  'FPTT-12F-Room B': ['09:00 - 10:00', '14:00 - 15:30'],
+  'FPTT-12F-Conf Room': ['10:00 - 12:00', '14:00 - 16:00'],
+  'FPTT-12F-Training Room': ['08:00 - 10:00', '14:00 - 17:00'],
   // Duy Tân
   'DT-3F-Room Alpha': ['09:00 - 11:00', '14:00 - 16:00'],
   'DT-4F-Room Beta': ['10:00 - 12:00', '13:00 - 15:00'],
@@ -72,6 +60,8 @@ const timeSlotsByRoom = {
 
 // Mock user data
 const userLocations = {
+  'ToanLM1': { location: 'FPT Tower', floor: '12th Floor' },
+  'AnNH8': { location: 'Hoà Lạc', floor: '2nd Floor' },
   'user123': { location: 'FPT Tower', floor: '10th Floor' },
   'admin456': { location: 'Hoà Lạc', floor: '1st Floor' },
   'dev789': { location: 'Fville 3', floor: 'Wing C - 3rd' }
@@ -110,7 +100,12 @@ app.get('/api/rooms', (req, res) => {
     return res.status(400).json({ error: 'Invalid or missing floor parameter for the specified location' });
   }
 
-  res.json(roomsData[location]?.[floor] || []);
+  const rooms = roomsData[location]?.[floor] || [];
+  const roomsWithTimeSlots = rooms.map(room => ({
+    roomName: room,
+    timeSlots: timeSlotsByRoom[room] || []
+  }));
+  res.json(roomsWithTimeSlots);
 });
 
 // Get available time slots for a specific room (room name is assumed unique)
@@ -139,21 +134,28 @@ app.get('/api/timeslots', (req, res) => {
 
 // Simulate booking a room
 app.post('/api/book', (req, res) => {
-  const { location, floor, room, timeSlot } = req.body;
+  const { username, location, floor, room, timeSlot } = req.body;
 
   // Basic validation
-  if (!location || !floor || !room || !timeSlot) {
-    return res.status(400).json({ error: 'Missing booking details (location, floor, room, timeSlot)' });
+  if (!username || !location || !floor || !room || !timeSlot) {
+    return res.status(400).json({ error: 'Missing booking details (username, location, floor, room, timeSlot)' });
   }
 
+   // Get user data
+    const userData = userLocations[username];
+    if (!userData) {
+        return res.status(404).json({ error: 'User not found' });
+    }
+
   // Add more specific validation (does location/floor/room/timeslot exist?)
-  if (!locationsData[location] ||
+  if (location !== userData.location ||
+      floor !== userData.floor ||
+      !locationsData[location] ||
       !locationsData[location].includes(floor) ||
       !roomsData[location]?.[floor]?.includes(room) ||
       !timeSlotsByRoom[room]?.includes(timeSlot)) {
       return res.status(400).json({ error: 'Invalid booking details provided.' });
   }
-
 
   // In a real app, you would:
   // 1. Validate the location, room, and time slot exist and are available.
@@ -162,6 +164,7 @@ app.post('/api/book', (req, res) => {
 
   // Log a more prominent success message to the server console
   console.log(`\n✅ --- Successful Booking ---`);
+  console.log(`   Username: ${username}`);
   console.log(`   Location: ${location}`);
   console.log(`   Floor:    ${floor}`);
   console.log(`   Room:     ${room}`);
@@ -169,13 +172,13 @@ app.post('/api/book', (req, res) => {
   console.log(`---------------------------\n`);
 
   // For the demo, always return success
-  res.json({ success: true, message: `Successfully booked ${room} on ${floor} at ${location} for ${timeSlot}` });
+  res.json({ success: true, message: `Successfully booked ${room} on ${floor} at ${location} for ${timeSlot} for user ${username}` });
 });
 
 // Get mock location/floor for a user
-app.get('/api/user-location/:userId', (req, res) => {
-    const userId = req.params.userId;
-    const userData = userLocations[userId];
+app.get('/api/user-location/:username', (req, res) => {
+    const username = req.params.username;
+    const userData = userLocations[username];
 
     if (!userData) {
         return res.status(404).json({ error: 'User not found' });
