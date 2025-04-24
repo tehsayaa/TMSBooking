@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const locationSelect = document.getElementById('location');
-    const floorSelect = document.getElementById('floor'); // Added floor select
+    const floorSelect = document.getElementById('floor');
     const roomSelect = document.getElementById('room');
     const timeslotSelect = document.getElementById('timeslot');
     const bookButton = document.getElementById('book-button');
@@ -13,7 +13,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function populateSelect(selectElement, options) {
-        clearSelect(selectElement, selectElement.options[0].text); // Keep default text
+        clearSelect(selectElement.options[0].text);
+        if (options && options.length > 0) {
+            options.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option;
+                opt.textContent = option;
+                selectElement.appendChild(opt);
+            });
+            selectElement.disabled = false;
+        } else {
+             selectElement.innerHTML = `<option value="">-- No options available --</option>`;
+             selectElement.disabled = true;
+        }
+    }
+
+    function showMessage(message, isSuccess) {
+        messageArea.textContent = message;
+        messageArea.className = isSuccess ? 'success' : 'error';
+    }
+
+    function populateRoomSelect(selectElement, options) {
+        clearSelect(selectElement, selectElement.options[0].text);
         if (options && options.length > 0) {
             options.forEach(option => {
                 const opt = document.createElement('option');
@@ -28,23 +49,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function showMessage(message, isSuccess) {
-        messageArea.textContent = message;
-        messageArea.className = isSuccess ? 'success' : 'error'; // Use classList for better practice
-        // Optionally clear message after some time
-        // setTimeout(() => messageArea.textContent = '', 5000);
-    }
-
     // --- API Fetch Functions ---
     async function fetchLocations() {
         try {
             const response = await fetch('/api/locations');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
             const locations = await response.json();
             populateSelect(locationSelect, locations);
         } catch (error) {
             console.error('Error fetching locations:', error);
-            showMessage('Failed to load locations.', false);
+            showMessage(error.message || 'Failed to load locations.', false);
         }
     }
 
@@ -57,7 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const response = await fetch(`/api/floors?location=${encodeURIComponent(location)}`);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
             const floors = await response.json();
             populateSelect(floorSelect, floors);
         } catch (error) {
@@ -74,9 +94,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const response = await fetch(`/api/rooms?location=${encodeURIComponent(location)}&floor=${encodeURIComponent(floor)}`);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
             const rooms = await response.json();
-            populateSelect(roomSelect, rooms);
+            populateRoomSelect(roomSelect, rooms);
         } catch (error) {
             console.error('Error fetching rooms:', error);
             showMessage(`Failed to load rooms for ${location} - ${floor}.`, false);
@@ -132,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Error booking room:', error);
-            showMessage(error.message || 'An error occurred during booking.', false);
+            showMessage(result.message || 'An error occurred during booking.', false);
         } finally {
              // Re-enable button only if a timeslot is still selected
              if (timeslotSelect.value) {
@@ -144,7 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Event Listeners ---
     locationSelect.addEventListener('change', (e) => {
-        fetchFloors(e.target.value); // Fetch floors when location changes
+        const selectedLocation = e.target.value;
+        fetchFloors(selectedLocation); // Fetch floors when location changes
     });
 
     floorSelect.addEventListener('change', (e) => {
