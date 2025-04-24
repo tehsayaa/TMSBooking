@@ -17,8 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (options && options.length > 0) {
             options.forEach(option => {
                 const opt = document.createElement('option');
-                opt.value = option;
-                opt.textContent = option;
+                opt.value = option.roomName;
+                opt.textContent = `${option.roomName} (${option.timeSlots.join(', ')})`;
                 selectElement.appendChild(opt);
             });
             selectElement.disabled = false;
